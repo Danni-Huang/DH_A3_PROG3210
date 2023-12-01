@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">DH_A3_PROG3210</string>
+    <string name="open_nav">Open Navigation Drawer</string>
+    <string name="close_nav">Close Navigation Drawer</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="welcome">Welcome</string>
+    <string name="game">Game</string>
+    <string name="high_scores">High Scores</string>
+    <string name="logout">Logout</string>
+    <string name="memory_game">Memory Game</string>
+    <string name="dhuang3993_conestogac_on_ca">dhuang3993@conestogac.on.ca</string>
+    <string name="welcome_to_memory_game">Welcome to Memory Game</string>
+</resources>
