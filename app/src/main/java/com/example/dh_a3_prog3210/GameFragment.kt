@@ -5,27 +5,68 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.GridLayout
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.lifecycle.ViewModelProvider
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [GameFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class GameFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+
+    private lateinit var tvTiles: TextView
+    private lateinit var tvScore: TextView
+    private lateinit var gameViewModel: GameViewModel
+    private lateinit var gridLayout: GridLayout
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        gameViewModel = ViewModelProvider(this).get(GameViewModel::class.java)
+
+        gameViewModel.generateTiles()
+
+        gridLayout = view.findViewById(R.id.gridLayout)
+        gameViewModel.originalTiles.observe(viewLifecycleOwner) { tiles ->
+            // Call the method to display the original tiles
+            displayOriginalTiles(tiles)
+        }
+    }
+
+    private fun displayOriginalTiles(tiles: List<Tile>) {
+        gridLayout.removeAllViews()
+
+        // Set the number of rows and columns
+        val rows = 6
+        val columns = 6
+        gridLayout.rowCount = rows
+        gridLayout.columnCount = columns
+
+        val imageSize = 160
+
+        // Calculate the margin size
+        val marginSize = 4
+
+        // Loop through to create and add ImageViews
+        for (tile in tiles) {
+            val imageView = ImageView(requireContext())
+            imageView.layoutParams = GridLayout.LayoutParams().apply {
+                width = imageSize
+                height = imageSize
+                setMargins(marginSize, marginSize, marginSize, marginSize)
+            }
+
+            imageView.setImageResource(tile.originalImageResource)
+
+            // Add the ImageView to the GridLayout
+            gridLayout.addView(imageView)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            //param1 = it.getString(ARG_PARAM1)
+            //param2 = it.getString(ARG_PARAM2)
         }
     }
 
@@ -33,27 +74,51 @@ class GameFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val fragmentView = inflater.inflate(R.layout.fragment_game, container, false)
+  /*      val gridLayout = fragmentView.findViewById<GridLayout>(R.id.gridLayout)
+
+        // Set the number of rows and columns
+        val rows = 6
+        val columns = 6
+        gridLayout.rowCount = rows
+        gridLayout.columnCount = columns*/
+
+        val imageSize = 160
+
+        // Initialize TextViews
+        tvTiles = fragmentView.findViewById(R.id.tvTiles)
+        tvScore = fragmentView.findViewById(R.id.tvScore)
+
+        // Update TextViews
+        // tvTiles.text = "Tiles: 5"
+        // tvScore.text = "Score: $updatedScore"
+
+        // Calculate the margin size
+/*        val marginSize = 4
+
+        // Loop through to create and add ImageViews
+        for (i in 0 until rows) {
+            for (j in 0 until columns) {
+                val imageView = ImageView(requireContext())
+                imageView.layoutParams = GridLayout.LayoutParams().apply {
+                    width = imageSize
+                    height = imageSize
+                    setMargins(marginSize, marginSize, marginSize, marginSize)
+                }
+
+                imageView.setImageResource(R.drawable.blue_grid)
+
+                // Add the ImageView to the GridLayout
+                gridLayout.addView(imageView)
+            }
+        }*/
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_game, container, false)
+        return fragmentView
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment GameFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            GameFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    private fun updateHighlightedTilesUI(highlightedTiles: List<Tile>) {
+        // Implement UI update logic to highlight the specified tiles
+        // For example, change the background color of the corresponding views
     }
 }

@@ -2,7 +2,6 @@
     <string name="app_name">DH_A3_PROG3210</string>
     <string name="open_nav">Open Navigation Drawer</string>
     <string name="close_nav">Close Navigation Drawer</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="welcome">Welcome</string>
     <string name="game">Game</string>
     <string name="high_scores">High Scores</string>
@@ -10,4 +9,26 @@
     <string name="memory_game">Memory Game</string>
     <string name="dhuang3993_conestogac_on_ca">dhuang3993@conestogac.on.ca</string>
     <string name="welcome_to_memory_game">Welcome to Memory Game</string>
+    <string name="enter_player_name_hint">Please Enter Player Name</string>
+    <string name="instructions_content">
+        <![CDATA[
+        This is a memory game with 6 * 6 grid. Here is how to play:\n
+        \n
+        1. The game highlights 4 tiles for 3 seconds.\n
+        2. Memorize the positions of the highlighted tiles.\n
+        3. you must correctly pick the 4 highlighted tiles within 5 seconds.\n
+        4. If you selects the wrong tile or time runs out, the game ends.\n
+        5. Correct picks earn 10 points.\n
+        \n
+        After successfully completing 3 rounds, the game becomes more challenging:\n
+        \n
+        6. You are now required to pick 5 tiles.\n
+        \n
+        Good luck and enjoy the game!\n
+        ]]>
+    </string>
+
+    <!-- string using in fragment game xml -->
+    <string name="tiles_4">Tiles: 4</string>
+    <string name="score_0">Score: 0</string>
 </resources>

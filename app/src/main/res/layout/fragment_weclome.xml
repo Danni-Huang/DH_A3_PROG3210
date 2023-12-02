@@ -1,16 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".WelcomeFragment">
 
-    <!-- TODO: Update blank fragment layout -->
+    <!-- TextView for welcome message -->
     <TextView
+        android:id="@+id/txtWelcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="@string/welcome_to_memory_game"
+        android:textColor="@color/lavender"
+        android:textSize="30sp"
+        android:textStyle="bold" />
+
+    <!-- ScrollView for instructions -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/welcome_to_memory_game"
-        android:textSize="30sp"
-        android:textColor="@color/lavender"/>
+        android:layout_below="@id/txtWelcome"
+        android:layout_marginTop="16dp"
+        android:padding="16dp"
+        android:background="@color/white"
+        android:scrollbars="none">
 
-</FrameLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="13dp"
+            android:autoLink="web"
+            android:gravity="start"
+            android:padding="16dp"
+            android:scrollbars="none"
+            android:text="@string/instructions_content"
+            android:textAlignment="gravity"
+            android:textColor="@color/purple_700"
+            android:textColorHighlight="@android:color/darker_gray"
+            android:textIsSelectable="true"
+            android:textSize="18sp"
+            android:textStyle="italic" />
+    </ScrollView>
+
+    <!-- EditText for entering player name -->
+    <EditText
+        android:id="@+id/editPlayerName"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_below="@id/txtWelcome"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="520dp"
+        android:layout_marginEnd="16dp"
+        android:hint="@string/enter_player_name_hint"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:textColorHint="@color/grey"
+        android:textColor="@color/black"/>
+
+</RelativeLayout>

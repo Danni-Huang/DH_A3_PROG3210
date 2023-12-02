@@ -13,18 +13,30 @@ import com.google.android.material.navigation.NavigationView
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var drawerLayout: DrawerLayout
 
+    /**
+     * Called when the activity is first created. This is where you should
+     * do all of your normal static set up: create views, bind data to lists,
+     * etc. This method also provides you with a [Bundle] containing the
+     * activity's previously frozen state, if there was one.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down, then this [Bundle] contains the data it
+     *     most recently supplied in [onSaveInstanceState]. Otherwise, it is null.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout)
 
+        // find the toolbar in the activity layout
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         val navigationView = findViewById<NavigationView>(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
 
+        // create and set up the ActionBarDrawerToggle for the drawerlayout
         val toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav)
 
         drawerLayout.addDrawerListener(toggle)
@@ -37,6 +49,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    /**
+     * Called when a menu item in the NavigationView is selected. Performs
+     * the corresponding action based on the selected item.
+     *
+     * @param item The selected menu item.
+     * @return `true` to consume the event and handle it, `false` to allow
+     *     normal menu processing to proceed.
+     */
     override fun onNavigationItemSelected (item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_welcome -> supportFragmentManager.beginTransaction()
@@ -50,12 +70,4 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
-
-/*    override fun onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            onBackPressedDispatcher.onBackPressed()
-        }
-    }*/
 }
