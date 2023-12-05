@@ -1,40 +1,198 @@
 package com.example.dh_a3_prog3210
 
+import android.util.Log
+import android.widget.Toast
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.dh_a3_prog3210.GameModel.Tile
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class GameViewModel : ViewModel() {
-    private val _originalTiles = MutableLiveData<List<Tile>>()
-    val originalTiles: LiveData<List<Tile>> get() = _originalTiles
 
-    // Example: fun startTileHighlighting()
-    // Example: fun onTileClicked(tile: Tile)
+    private val _originalTiles = MutableLiveData<List<GameModel.Tile>>()
+    private val _highlightedPositionsLiveData = MutableLiveData<List<Pair<Int, Int>>>()
 
-    private val _tiles = MutableLiveData<List<Tile>>()
-    val tiles: LiveData<List<Tile>> get() = _tiles
+    val originalTiles: LiveData<List<GameModel.Tile>> get() = _originalTiles
+    val highlightedPositionsLiveData: LiveData<List<Pair<Int, Int>>> get() = _highlightedPositionsLiveData
 
+    private val gridSize = 6
 
-    // Function to generate tiles
-    fun generateTiles() {
+    private val _clickedTiles = MutableLiveData<List<Tile>>()
+    val clickedTiles: LiveData<List<Tile>> get() = _clickedTiles
+
+    private var score = 0
+
+    private val _showWrongMessage = MutableLiveData<Unit>()
+    val showWrongMessage: LiveData<Unit> get() = _showWrongMessage
+
+    init {
+        _originalTiles.value = generateTiles()
+    }
+
+    var clickedPositions: List<Pair<Int, Int>> = emptyList()
+    private val _tileHighlightLiveData = MutableLiveData<List<Pair<Int, Int>>>()
+    val tileHighlightLiveData: LiveData<List<Pair<Int, Int>>> get() = _tileHighlightLiveData
+
+    private val initiallyHighlightedTiles = mutableListOf<Pair<Int, Int>>()
+
+    private val _updateTileUILiveData = MutableLiveData<Tile>()
+    val updateTileUILiveData: LiveData<Tile> get() = _updateTileUILiveData
+
+    fun updateHighlightedPositions(positions: List<Pair<Int, Int>>) {
+        _highlightedPositionsLiveData.value = positions
+    }
+
+    fun generateTiles(): List<GameModel.Tile> {
         val rows = 6
         val columns = 6
 
-        val generatedTiles = mutableListOf<Tile>()
+        val generatedTiles = mutableListOf<GameModel.Tile>()
 
         for (i in 0 until rows) {
             for (j in 0 until columns) {
-                val tile = Tile(
+                val tile = GameModel.Tile(
                     id = i * columns + j,
                     originalImageResource = R.drawable.blue_grid,
-                    highlightedImageResource = R.drawable.green_grid
+                    highlightedImageResource = R.drawable.green_grid,
+                    row = i,
+                    col = j,
+                    isHighlighted = false,
+                    clicked = false
                 )
                 generatedTiles.add(tile)
             }
         }
 
-        // Update LiveData with the generated tiles
-        _tiles.value = generatedTiles
-        _originalTiles.value = generatedTiles
+        return generatedTiles
+    }
+
+    private val _highlightedTilePositions = MutableLiveData<List<Pair<Int, Int>>>()
+    val highlightedTilePositions: LiveData<List<Pair<Int, Int>>> get() = _highlightedTilePositions
+
+    fun highlightRandomTiles() {
+        Log.d("GameViewModel", "Highlighting random tiles")
+        val randomPositions = GameModel().generateRandomPositions()
+
+        _highlightedTilePositions.value = randomPositions
+
+        for (position in randomPositions) {
+            val tile = getTileAtPosition(position.first, position.second)
+            tile?.isHighlighted = true
+        }
+
+        _highlightedPositionsLiveData.value = randomPositions
+    }
+
+    fun highlightExistingTiles() {
+        Log.d("GameViewModel", "Game end, show the existing tiles")
+        _highlightedPositionsLiveData.value?.let { positions ->
+            for (position in positions) {
+                val tile = getTileAtPosition(position.first, position.second)
+                tile?.isHighlighted = true
+            }
+        }
+    }
+
+    fun highlightSelectedTile(row: Int, col: Int) {
+        val tile = getTileAtPosition(row, col)
+        tile?.isHighlighted = true
+    }
+
+    fun hideRandomTiles() {
+        _highlightedTilePositions.value?.let { positions ->
+            for (position in positions) {
+                val tile = getTileAtPosition(position.first, position.second)
+                tile?.isHighlighted = false
+            }
+        }
+    }
+
+    fun getTileAtPosition(row: Int, col: Int): GameModel.Tile? {
+        val tiles = _originalTiles.value
+        return if (row in 0 until gridSize && col in 0 until gridSize && tiles != null) {
+            tiles[row * gridSize + col]
+        } else {
+            null
+        }
+    }
+
+    fun resetInitiallyHighlightedTiles() {
+        initiallyHighlightedTiles.clear()
+        _tileHighlightLiveData.value = emptyList()
+    }
+
+
+    fun resetHighlightedTiles() {
+        Log.d("GameViewModel", "About to reset highlighted tiles")
+        _highlightedTilePositions.value?.let { positions ->
+            for (position in positions) {
+                val tile = getTileAtPosition(position.first, position.second)
+                tile?.isHighlighted = false
+                Log.d("GameViewModel", "Tile at position (${position.first}, ${position.second}) is no longer highlighted: $tile")
+            }
+        }
+
+        // Update the UI to reset highlighted tiles
+        _originalTiles.value = _originalTiles.value.orEmpty().map { it.copy(isHighlighted = false) }
+
+        // Do not update the highlighted positions here
+        // updateHighlightedPositions(emptyList())
+
+        Log.d("GameViewModel", "Highlighted tiles reset completed")
+    }
+
+    fun isWin(): Boolean {
+        val userSelection = clickedPositions.toSet()
+        val correctAnswer = _highlightedPositionsLiveData.value!!.toSet()
+        return userSelection == correctAnswer
+    }
+
+    fun onTileClicked(clickedTile: Tile): Boolean {
+        // Check if the clicked tile was part of the initially highlighted positions
+        val wasInitiallyHighlighted = _highlightedPositionsLiveData.value!!.contains(Pair(clickedTile.row, clickedTile.col))
+
+        if (!wasInitiallyHighlighted) {
+            return false
+        }
+
+        clickedPositions += Pair(clickedTile.row, clickedTile.col)
+
+        return true
+
+        /*        // Check if the clicked tile is currently highlighted
+        if (wasInitiallyHighlighted) {
+            // Toggle the clicked state of the tile only if it was initially highlighted
+            clickedTile.isHighlighted = !clickedTile.isHighlighted
+
+            // Update the clickedTiles LiveData
+            val currentClickedTiles = _clickedTiles.value.orEmpty().toMutableList()
+            currentClickedTiles.add(clickedTile)
+            _clickedTiles.value = currentClickedTiles
+
+            // Check if the clicked tile is green (highlighted) and update the score
+            if (clickedTile.isHighlighted) {
+                score += 1
+                // You may want to update the UI to reflect the new score
+                // e.g., by using another LiveData for the score
+            } else {
+                // Show wrong message and reset all initially highlighted tiles
+                _showWrongMessage.value = Unit
+
+                // Delay the reset to allow time for the wrong message to be displayed
+                viewModelScope.launch {
+                    delay(1000) // Adjust the delay as needed
+                    resetInitiallyHighlightedTiles()
+                }
+            }
+        } else {
+            // Show wrong message immediately for wrong tiles
+            _showWrongMessage.value = Unit
+        }*/
     }
 }

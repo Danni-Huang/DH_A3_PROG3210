@@ -32,18 +32,39 @@
         android:textStyle="bold"
         android:textColor="@color/grey"/>
 
+    <Button
+        android:id="@+id/startGameButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/tvTiles"
+        android:layout_marginTop="16dp"
+        android:text="@string/start_game" />
+
+    <TextView
+        android:id="@+id/tvCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/startGameButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="3"
+        android:textSize="28sp"
+        android:visibility="invisible"
+        android:textStyle="bold"
+        android:textColor="@color/grey"/>
+
     <GridLayout
         android:id="@+id/gridLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:rowCount="6"
         android:columnCount="6"
-        android:layout_below="@id/tvTiles"
+        android:layout_below="@id/tvCountdown"
         android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
-        android:layout_marginTop="150dp"
         android:layout_marginBottom="15dp">
     </GridLayout>
-
 </RelativeLayout>

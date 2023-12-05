@@ -31,4 +31,5 @@
     <!-- string using in fragment game xml -->
     <string name="tiles_4">Tiles: 4</string>
     <string name="score_0">Score: 0</string>
+    <string name="start_game">Start Game</string>
 </resources>
