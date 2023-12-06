@@ -26,7 +26,7 @@ class GameViewModel : ViewModel() {
     private val _clickedTiles = MutableLiveData<List<Tile>>()
     val clickedTiles: LiveData<List<Tile>> get() = _clickedTiles
 
-    private var score = 0
+    private var score: Int = 0
 
     private val _showWrongMessage = MutableLiveData<Unit>()
     val showWrongMessage: LiveData<Unit> get() = _showWrongMessage
@@ -166,37 +166,13 @@ class GameViewModel : ViewModel() {
         clickedPositions += Pair(clickedTile.row, clickedTile.col)
 
         return true
-
-        /*        // Check if the clicked tile is currently highlighted
-        if (wasInitiallyHighlighted) {
-            // Toggle the clicked state of the tile only if it was initially highlighted
-            clickedTile.isHighlighted = !clickedTile.isHighlighted
-
-            // Update the clickedTiles LiveData
-            val currentClickedTiles = _clickedTiles.value.orEmpty().toMutableList()
-            currentClickedTiles.add(clickedTile)
-            _clickedTiles.value = currentClickedTiles
-
-            // Check if the clicked tile is green (highlighted) and update the score
-            if (clickedTile.isHighlighted) {
-                score += 1
-                // You may want to update the UI to reflect the new score
-                // e.g., by using another LiveData for the score
-            } else {
-                // Show wrong message and reset all initially highlighted tiles
-                _showWrongMessage.value = Unit
-
-                // Delay the reset to allow time for the wrong message to be displayed
-                viewModelScope.launch {
-                    delay(1000) // Adjust the delay as needed
-                    resetInitiallyHighlightedTiles()
-                }
-            }
-        } else {
-            // Show wrong message immediately for wrong tiles
-            _showWrongMessage.value = Unit
-        }*/
     }
 
+    fun getTotalScore(): Int {
+        return score
+    }
 
+    fun addScore(newScore: Int) {
+        score += newScore
+    }
 }

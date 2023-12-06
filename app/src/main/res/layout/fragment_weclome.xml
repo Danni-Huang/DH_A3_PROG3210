@@ -58,6 +58,15 @@
         android:imeOptions="actionDone"
         android:inputType="text"
         android:textColorHint="@color/grey"
-        android:textColor="@color/black"/>
+        android:textColor="@color/black" />
+
+    <Button
+        android:id="@+id/saveNameButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/editPlayerName"
+        android:layout_marginTop="16dp"
+        android:text="Save" />
 
 </RelativeLayout>

@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.Button
 import android.widget.TextView
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 
 // TODO: Rename parameter arguments, choose names that match
@@ -41,8 +43,25 @@ class WelcomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val view = inflater.inflate(R.layout.fragment_weclome, container, false)
+        editPlayerName = view.findViewById(R.id.editPlayerName)
+        val saveNameButton: Button = view.findViewById(R.id.saveNameButton)
+
+        saveNameButton.setOnClickListener {
+            val playerName = editPlayerName.text.toString()
+            val playerInfo = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
+            playerInfo.playerName = playerName
+
+            Log.d("AddPlay", "Play name added")
+
+            val transaction = requireActivity().supportFragmentManager.beginTransaction()
+            transaction.replace(R.id.fragment_container, GameFragment())
+            transaction.addToBackStack(null)
+            transaction.commit()
+        }
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_weclome, container, false)
+        return view
     }
 
     companion object {

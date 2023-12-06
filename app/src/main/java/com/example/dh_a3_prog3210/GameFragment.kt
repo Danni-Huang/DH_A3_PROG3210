@@ -1,5 +1,6 @@
 package com.example.dh_a3_prog3210
 
+import android.annotation.SuppressLint
 import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.util.Log
@@ -25,11 +26,14 @@ class GameFragment : Fragment() {
     private lateinit var startGameButton: Button
     private lateinit var tvCountdown: TextView
     private var showResult = false
+    private var gameOngoing= false
+    private var blockStartButton = false
 
     private val gameViewModel by lazy {
         ViewModelProvider(this).get(GameViewModel::class.java)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -38,11 +42,13 @@ class GameFragment : Fragment() {
         tvCountdown = view.findViewById(R.id.tvCountdown)
         tvScore = view.findViewById(R.id.tvScore)
 
+        val playerInfo = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
+
         gridLayout.removeAllViews()
 
         val imageSize = 160
         val marginSize = 4
-        var score = 0
+        var score: Int
 
         val tiles = gameViewModel.originalTiles.value ?: emptyList()
 
@@ -62,36 +68,42 @@ class GameFragment : Fragment() {
 
             imageView.setOnClickListener {
                 // Handle the click event by calling a method in the ViewModel
-                val gameContinue = gameViewModel.onTileClicked(tile)
+                if (gameOngoing) {
+                    val gameContinue = gameViewModel.onTileClicked(tile)
 
-                if (gameContinue) {
-                    for (position in gameViewModel.clickedPositions) {
-                        gameViewModel.highlightSelectedTile(position.first, position.second)
+                    if (gameContinue) {
+                        for (position in gameViewModel.clickedPositions) {
+                            gameViewModel.highlightSelectedTile(position.first, position.second)
+                        }
+                        highlightTiles(gameViewModel.clickedPositions)
+                        Log.d("gameResult", "right click, game continue")
+                    } else {
+                        showResult = true
+                        // Reset the countdown text and hide the TextView
+                        tvCountdown.text = "You lose! Your total score is " + playerInfo.playerScore.toString()
+                        playerInfo.playerScore = 0
+                        score = 0
+                        tvScore.text = score.toString()
+                        tvCountdown.visibility = View.VISIBLE
+                        gameViewModel.clickedPositions = emptyList()
+                        Log.d("gameResult", "wrong click, game stop")
                     }
-                    highlightTiles(gameViewModel.clickedPositions)
-                    Log.d("gameResult", "right click, game continue")
-                } else {
-                    showResult = true
-                    // Reset the countdown text and hide the TextView
-                    tvCountdown.text = "You lose!"
-                    tvCountdown.visibility = View.VISIBLE
-                    gameViewModel.clickedPositions = emptyList()
-                    Log.d("gameResult", "wrong click, game stop")
+
+                    val gameResult = gameViewModel.isWin()
+                    if (gameResult) {
+                        showResult = true
+                        // Reset the countdown text and hide the TextView
+                        tvCountdown.text = "You win!"
+                        playerInfo.playerScore += 10
+                        score = playerInfo.playerScore
+                        tvScore.text = score.toString()
+
+                        tvCountdown.visibility = View.VISIBLE
+                        gameViewModel.clickedPositions = emptyList()
+                    }
+
+                    Log.d("gameResult", gameResult.toString())
                 }
-
-                val gameResult = gameViewModel.isWin()
-                if (gameResult) {
-                    showResult = true
-                    // Reset the countdown text and hide the TextView
-                    tvCountdown.text = "You win!"
-                    score += 10
-                    tvScore.text = score.toString()
-
-                    tvCountdown.visibility = View.VISIBLE
-                    gameViewModel.clickedPositions = emptyList()
-                }
-
-                Log.d("gameResult", gameResult.toString())
             }
         }
 
@@ -108,60 +120,68 @@ class GameFragment : Fragment() {
 
         // Set click listener for the "Start Game" button
         startGameButton.setOnClickListener {
-            showResult = false
-            gameViewModel.resetHighlightedTiles()
-
-            gameViewModel.highlightedTilePositions.value?.let { positions ->
-                highlightTiles(positions)
-            }
-
-            // Start the game by triggering the highlighting of tiles
-            gameViewModel.highlightRandomTiles()
-
-            // Display the countdown text
-            tvCountdown.visibility = View.VISIBLE
-
-            // Use a Coroutine to remove the initial highlight after 3 seconds
-            viewLifecycleOwner.lifecycleScope.launch {
-                for (i in 3 downTo 1) {
-                    tvCountdown.text = i.toString()
-                    delay(1000)
-                }
-
-                gameViewModel.hideRandomTiles()
+            if (!blockStartButton) {
+                Log.d("GameStart", "Player ${playerInfo.playerName} starting the game!")
+                blockStartButton = true
+                showResult = false
+                gameViewModel.resetHighlightedTiles()
 
                 gameViewModel.highlightedTilePositions.value?.let { positions ->
                     highlightTiles(positions)
                 }
 
-                Log.d("GameFragment", "About to reset initially highlighted tiles")
-                // Reset the initial highlight
-                gameViewModel.resetInitiallyHighlightedTiles()
+                // Start the game by triggering the highlighting of tiles
+                gameViewModel.highlightRandomTiles()
 
-                Log.d("GameAnswer", gameViewModel.highlightedPositionsLiveData.value.toString())
+                // Display the countdown text
+                tvCountdown.visibility = View.VISIBLE
 
-                for (i in 6 downTo 1) {
-                    if (!showResult) {
-                        if (i == 6) {
-                            tvCountdown.text = "Start guessing!"
-                            delay(1000)
-                            continue
-                        }
+                // Use a Coroutine to remove the initial highlight after 3 seconds
+                viewLifecycleOwner.lifecycleScope.launch {
+                    for (i in 3 downTo 1) {
                         tvCountdown.text = i.toString()
                         delay(1000)
                     }
-                }
 
-                if (!showResult) {
-                    // Reset the countdown text and hide the TextView
-                    tvCountdown.text = ""
-                    tvCountdown.visibility = View.INVISIBLE
-                }
+                    gameViewModel.hideRandomTiles()
 
-                gameViewModel.highlightExistingTiles()
+                    gameViewModel.highlightedTilePositions.value?.let { positions ->
+                        highlightTiles(positions)
+                    }
 
-                gameViewModel.highlightedPositionsLiveData.value?.let { positions ->
-                    highlightTiles(positions)
+                    Log.d("GameFragment", "About to reset initially highlighted tiles")
+                    // Reset the initial highlight
+                    gameViewModel.resetInitiallyHighlightedTiles()
+
+                    Log.d("GameAnswer", gameViewModel.highlightedPositionsLiveData.value.toString())
+
+                    for (i in 6 downTo 1) {
+                        if (!showResult) {
+                            if (i == 6) {
+                                tvCountdown.text = "Start guessing!"
+                                gameOngoing = true
+                                delay(1000)
+                                continue
+                            }
+                            tvCountdown.text = i.toString()
+                            delay(1000)
+                        }
+                    }
+
+                    gameOngoing = false
+                    blockStartButton = false
+
+                    if (!showResult) {
+                        // Reset the countdown text and hide the TextView
+                        tvCountdown.text = ""
+                        tvCountdown.visibility = View.INVISIBLE
+                    }
+
+                    gameViewModel.highlightExistingTiles()
+
+                    gameViewModel.highlightedPositionsLiveData.value?.let { positions ->
+                        highlightTiles(positions)
+                    }
                 }
             }
         }
