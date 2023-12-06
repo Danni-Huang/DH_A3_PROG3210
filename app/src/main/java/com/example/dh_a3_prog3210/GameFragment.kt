@@ -36,11 +36,13 @@ class GameFragment : Fragment() {
         gridLayout = view.findViewById(R.id.gridLayout)
         startGameButton = view.findViewById(R.id.startGameButton)
         tvCountdown = view.findViewById(R.id.tvCountdown)
+        tvScore = view.findViewById(R.id.tvScore)
 
         gridLayout.removeAllViews()
 
         val imageSize = 160
         val marginSize = 4
+        var score = 0
 
         val tiles = gameViewModel.originalTiles.value ?: emptyList()
 
@@ -60,7 +62,7 @@ class GameFragment : Fragment() {
 
             imageView.setOnClickListener {
                 // Handle the click event by calling a method in the ViewModel
-                var gameContinue = gameViewModel.onTileClicked(tile)
+                val gameContinue = gameViewModel.onTileClicked(tile)
 
                 if (gameContinue) {
                     for (position in gameViewModel.clickedPositions) {
@@ -77,11 +79,14 @@ class GameFragment : Fragment() {
                     Log.d("gameResult", "wrong click, game stop")
                 }
 
-                var gameResult = gameViewModel.isWin()
+                val gameResult = gameViewModel.isWin()
                 if (gameResult) {
                     showResult = true
                     // Reset the countdown text and hide the TextView
                     tvCountdown.text = "You win!"
+                    score += 10
+                    tvScore.text = score.toString()
+
                     tvCountdown.visibility = View.VISIBLE
                     gameViewModel.clickedPositions = emptyList()
                 }

@@ -44,6 +44,8 @@ class GameViewModel : ViewModel() {
     private val _updateTileUILiveData = MutableLiveData<Tile>()
     val updateTileUILiveData: LiveData<Tile> get() = _updateTileUILiveData
 
+    val playerName: String = ""
+
     fun updateHighlightedPositions(positions: List<Pair<Int, Int>>) {
         _highlightedPositionsLiveData.value = positions
     }
@@ -195,4 +197,6 @@ class GameViewModel : ViewModel() {
             _showWrongMessage.value = Unit
         }*/
     }
+
+
 }
