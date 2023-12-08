@@ -42,7 +42,8 @@ class GameFragment : Fragment() {
         tvCountdown = view.findViewById(R.id.tvCountdown)
         tvScore = view.findViewById(R.id.tvScore)
 
-        val playerInfo = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
+        val playerViewModel = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
+        val highscoreViewModel = ViewModelProvider(requireActivity()).get(HighscoreViewModel::class.java)
 
         gridLayout.removeAllViews()
 
@@ -80,8 +81,11 @@ class GameFragment : Fragment() {
                     } else {
                         showResult = true
                         // Reset the countdown text and hide the TextView
-                        tvCountdown.text = "You lose! Your total score is " + playerInfo.playerScore.toString()
-                        playerInfo.playerScore = 0
+                        tvCountdown.text = "You lose! Your total score is " + playerViewModel.score().toString()
+                        if (playerViewModel.name() != "") {
+                            highscoreViewModel.updatePlayerScore(playerViewModel.name(), playerViewModel.score())
+                        }
+                        playerViewModel.clearScore()
                         score = 0
                         tvScore.text = score.toString()
                         tvCountdown.visibility = View.VISIBLE
@@ -94,8 +98,8 @@ class GameFragment : Fragment() {
                         showResult = true
                         // Reset the countdown text and hide the TextView
                         tvCountdown.text = "You win!"
-                        playerInfo.playerScore += 10
-                        score = playerInfo.playerScore
+                        playerViewModel.addScore(10)
+                        score = playerViewModel.score()
                         tvScore.text = score.toString()
 
                         tvCountdown.visibility = View.VISIBLE
@@ -121,7 +125,7 @@ class GameFragment : Fragment() {
         // Set click listener for the "Start Game" button
         startGameButton.setOnClickListener {
             if (!blockStartButton) {
-                Log.d("GameStart", "Player ${playerInfo.playerName} starting the game!")
+                Log.d("GameStart", "Player ${playerViewModel.name()} starting the game!")
                 blockStartButton = true
                 showResult = false
                 gameViewModel.resetHighlightedTiles()

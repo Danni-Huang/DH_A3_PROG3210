@@ -1,10 +1,13 @@
 package com.example.dh_a3_prog3210
 
+import android.annotation.SuppressLint
 import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.lifecycle.ViewModelProvider
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -20,6 +23,12 @@ class HighScoresFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private lateinit var name1: TextView
+    private lateinit var name2: TextView
+    private lateinit var name3: TextView
+    private lateinit var score1: TextView
+    private lateinit var score2: TextView
+    private lateinit var score3: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,8 +42,30 @@ class HighScoresFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_high_scores, container, false)
+    }
+
+    @SuppressLint("SetTextI18n")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        name1 = view.findViewById(R.id.name1)
+        name2 = view.findViewById(R.id.name2)
+        name3 = view.findViewById(R.id.name3)
+        score1 = view.findViewById(R.id.score1)
+        score2 = view.findViewById(R.id.score2)
+        score3 = view.findViewById(R.id.score3)
+
+        val highscoreViewModel = ViewModelProvider(requireActivity()).get(HighscoreViewModel::class.java)
+        val playerScores = highscoreViewModel.getPlayerScores()
+
+        name1.text = playerScores[0].first
+        score1.text = playerScores[0].second.toString()
+
+        name2.text = playerScores[1].first
+        score2.text = playerScores[1].second.toString()
+
+        name3.text = playerScores[2].first
+        score3.text = playerScores[2].second.toString()
     }
 
     companion object {

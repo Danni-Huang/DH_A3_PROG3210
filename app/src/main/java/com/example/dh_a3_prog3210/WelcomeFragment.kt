@@ -50,7 +50,7 @@ class WelcomeFragment : Fragment() {
         saveNameButton.setOnClickListener {
             val playerName = editPlayerName.text.toString()
             val playerInfo = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
-            playerInfo.playerName = playerName
+            playerInfo.enterName(playerName)
 
             Log.d("AddPlay", "Play name added")
 

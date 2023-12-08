@@ -32,4 +32,15 @@
     <string name="tiles_4">Tiles: 4</string>
     <string name="score_0">Score: 0</string>
     <string name="start_game">Start Game</string>
+
+    <string name="score_board">Score Board</string>
+
+    <string name="name_1">No Player</string>
+    <string name="name_2">No Player</string>
+    <string name="name_3">No Player</string>
+
+    <string name="score_1">--</string>
+    <string name="score_2">--</string>
+    <string name="score_3">--</string>
+
 </resources>

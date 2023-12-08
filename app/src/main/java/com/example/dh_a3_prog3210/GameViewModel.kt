@@ -167,12 +167,4 @@ class GameViewModel : ViewModel() {
 
         return true
     }
-
-    fun getTotalScore(): Int {
-        return score
-    }
-
-    fun addScore(newScore: Int) {
-        score += newScore
-    }
 }
