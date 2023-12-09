@@ -220,33 +220,6 @@ class GameFragment : Fragment() {
         }
     }
 
-    private fun displayOriginalTiles(tiles: List<GameModel.Tile>) {
-        // Set the number of rows and columns
-        val rows = 6
-        val columns = 6
-        gridLayout.rowCount = rows
-        gridLayout.columnCount = columns
-
-        val imageSize = 160
-
-        // Calculate the margin size
-        val marginSize = 4
-
-        // Iterate through existing child views
-        for (i in 0 until gridLayout.childCount) {
-            val child = gridLayout.getChildAt(i) as? ImageView
-            child?.let {
-                val tile = tiles[i % columns + (i / columns) * columns]
-                it.layoutParams = GridLayout.LayoutParams().apply {
-                    width = imageSize
-                    height = imageSize
-                    setMargins(marginSize, marginSize, marginSize, marginSize)
-                }
-                it.setImageResource(tile.originalImageResource)
-            }
-        }
-    }
-
     private fun highlightTiles(positions: List<Pair<Int, Int>>) {
         for ((row, col) in positions) {
             val tile = gameViewModel.getTileAtPosition(row, col)

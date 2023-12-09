@@ -8,7 +8,7 @@ class HighscoreViewModel: ViewModel() {
 
         val lowestScoreIndex = playerTopScores.indexOf(playerTopScores.minByOrNull { it.second }!!)
 
-        if (score > playerTopScores[lowestScoreIndex].second) {
+        if (score >= playerTopScores[lowestScoreIndex].second) {
             playerTopScores[lowestScoreIndex] = newPlayerScore
         }
         playerTopScores.sortByDescending { it.second }
