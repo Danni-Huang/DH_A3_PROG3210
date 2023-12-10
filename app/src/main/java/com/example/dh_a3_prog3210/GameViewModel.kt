@@ -57,8 +57,7 @@ class GameViewModel : ViewModel() {
 
     }
 
-    fun clearScoresAndRound() {
-        _score = 0
+    fun clearRound() {
         _roundNumber = 0
     }
 
@@ -106,24 +105,14 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    private fun addScore() {
-        if (_roundNumber >=3) {
-            _score += 20
-            return
-        }
-        _score += 10
-        return
-    }
-
-    fun getScore(): Int {
-        return _score
+    fun getRoundNumber(): Int {
+        return _roundNumber
     }
 
     fun isGameWin(): Boolean {
         val userSelection = _clickedPositions.toSet()
         val correctAnswer = _generatedPositions.toSet()
         if (userSelection == correctAnswer) {
-            addScore()
             _roundNumber += 1
             return true
         }
@@ -144,7 +133,7 @@ class GameViewModel : ViewModel() {
         return true
     }
 
-    fun getHightTilesByRoundNumber(): Int {
+    fun getHighLightTileCountByRoundNumber(): Int {
         if (_roundNumber >= 3) {
              return 5
         }

@@ -25,9 +25,7 @@ class GameFragment : Fragment() {
     private lateinit var gridLayout: GridLayout
     private lateinit var startGameButton: Button
     private lateinit var tvCountdown: TextView
-    private var showResult = false
     private var gameOngoing= false
-    private var blockStartButton = false
     private var winRoundNumber = 0
     private var gameContinue = true
     private var timeUp = true
@@ -46,8 +44,8 @@ class GameFragment : Fragment() {
         tvScore = view.findViewById(R.id.tvScore)
         tvTiles = view.findViewById(R.id.tvTiles)
 
-        val playerViewModel = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
-        val highscoreViewModel = ViewModelProvider(requireActivity()).get(HighscoreViewModel::class.java)
+        val playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
+        val highscoreViewModel = ViewModelProvider(requireActivity())[HighscoreViewModel::class.java]
 
         gridLayout.removeAllViews()
 
@@ -78,9 +76,10 @@ class GameFragment : Fragment() {
                         if (roundContinue && gameViewModel.isGameWin()) {
                             gameOngoing= false
                             gameContinue = true
-                            winRoundNumber += 1
                             Toast.makeText(requireContext(), "Great! Continue to next round!", Toast.LENGTH_LONG).show()
-                            val score = gameViewModel.getScore()
+                            val gameRound = gameViewModel.getRoundNumber()
+                            playerViewModel.addScore(gameRound)
+                            val score = playerViewModel.score()
                             renderScore(score.toString())
                             delay(500)
                             gameViewModel.clearAllPositions()
@@ -91,13 +90,14 @@ class GameFragment : Fragment() {
                             gameContinue = false
                             timeUp = false
                             renderLost()
-                            val score = gameViewModel.getScore()
-                            playerViewModel.addScore(score)
-                            highscoreViewModel.addToScoreBoard(playerViewModel.name(), playerViewModel.score())
+                            val score = playerViewModel.score()
+                            val playerName = playerViewModel.name()
+                            highscoreViewModel.addToScoreBoard(playerName, score)
                             delay(2000)
 
                             clearGame()
-                            renderScore(gameViewModel.getScore().toString())
+                            playerViewModel.clearScore()
+                            renderScore(playerViewModel.score().toString())
                         }
                     }
                 }
@@ -111,7 +111,7 @@ class GameFragment : Fragment() {
                 gameContinue = true
                 while (gameContinue) {
                     gameOngoing = false
-                    val highlightTileCount = gameViewModel.getHightTilesByRoundNumber()
+                    val highlightTileCount = gameViewModel.getHighLightTileCountByRoundNumber()
                     renderTileCount(highlightTileCount.toString())
                     gameContinue = false
                     val positions = gameViewModel.generateRandomPositions(highlightTileCount)
@@ -142,10 +142,11 @@ class GameFragment : Fragment() {
                     gameOngoing= false
                     timeUp = true
                     clearGame()
-                    val score = gameViewModel.getScore()
+                    val score = playerViewModel.score()
+                    val playerName = playerViewModel.name()
                     renderScore(score.toString())
-                    playerViewModel.addScore(score)
-                    highscoreViewModel.addToScoreBoard(playerViewModel.name(), playerViewModel.score())
+                    highscoreViewModel.addToScoreBoard(playerName, score)
+                    playerViewModel.clearScore()
                 }
                 startGameButton.isEnabled = true
             }
@@ -176,22 +177,20 @@ class GameFragment : Fragment() {
     }
 
     private fun renderLost() {
-        winRoundNumber = 0
-
         val correctPositions = gameViewModel.getCorrectPositions().map { it.copy() }
 
         gameViewModel.clearAllPositions()
         val allTiles = gameViewModel.getTiles()
         renderTiles(allTiles)
 
-        Toast.makeText(requireContext(), "Sorry! You lost.", Toast.LENGTH_LONG).show()
+        Toast.makeText(requireContext(), "Oops! You lost.", Toast.LENGTH_LONG).show()
         flashTiles(correctPositions)
     }
 
     private fun clearGame() {
-        gameViewModel.clearScoresAndRound()
+        gameViewModel.clearRound()
         gameViewModel.clearAllPositions()
-        renderTileCount(gameViewModel.getHightTilesByRoundNumber().toString())
+        renderTileCount(gameViewModel.getHighLightTileCountByRoundNumber().toString())
         val allTiles = gameViewModel.getTiles()
         renderTiles(allTiles)
     }
@@ -241,7 +240,7 @@ class GameFragment : Fragment() {
         // Initialize TextViews
         tvTiles = fragmentView.findViewById(R.id.tvTiles)
         tvScore = fragmentView.findViewById(R.id.tvScore)
-        renderTileCount(gameViewModel.getHightTilesByRoundNumber().toString())
+        renderTileCount(gameViewModel.getHighLightTileCountByRoundNumber().toString())
 
         // Inflate the layout for this fragment
         return fragmentView

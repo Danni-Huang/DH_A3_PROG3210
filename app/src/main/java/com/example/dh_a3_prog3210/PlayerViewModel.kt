@@ -8,8 +8,13 @@ class PlayerViewModel: ViewModel() {
         playerModel.playerName = name
     }
 
-    fun addScore(score: Int) {
-        playerModel.playerScore += score
+    fun addScore(roundNumber: Int) {
+        if (roundNumber > 3) {
+            playerModel.playerScore += 20
+            return
+        }
+        playerModel.playerScore += 10
+        return
     }
 
     fun name(): String {
