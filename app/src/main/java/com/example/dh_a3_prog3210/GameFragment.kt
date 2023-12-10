@@ -93,7 +93,7 @@ class GameFragment : Fragment() {
                             renderLost()
                             val score = gameViewModel.getScore()
                             playerViewModel.addScore(score)
-                            highscoreViewModel.updatePlayerScore(playerViewModel.name(), playerViewModel.score())
+                            highscoreViewModel.addToScoreBoard(playerViewModel.name(), playerViewModel.score())
                             delay(2000)
 
                             clearGame()
@@ -120,7 +120,13 @@ class GameFragment : Fragment() {
 
                     // Render highlighted tiles and wait 3 seconds
                     renderTiles(allTiles)
-                    delay(3000)
+
+                    for (i in 3 downTo 1) {
+                        renderTimer(i.toString())
+                        delay(1000)
+                    }
+
+                    renderTimer("")
 
                     // Set the game as ongoing to start the game.
                     gameOngoing = true
@@ -139,14 +145,23 @@ class GameFragment : Fragment() {
                     val score = gameViewModel.getScore()
                     renderScore(score.toString())
                     playerViewModel.addScore(score)
-                    highscoreViewModel.updatePlayerScore(playerViewModel.name(), playerViewModel.score())
+                    highscoreViewModel.addToScoreBoard(playerViewModel.name(), playerViewModel.score())
                 }
                 startGameButton.isEnabled = true
             }
         }
     }
 
-    fun flashTiles(positions: List<Pair<Int, Int>> ) {
+    private fun renderTimer(time: String) {
+        tvCountdown.text = time
+        if (time == "") {
+            tvCountdown.visibility = View.INVISIBLE
+            return
+        }
+        tvCountdown.visibility = View.VISIBLE
+    }
+
+    private fun flashTiles(positions: List<Pair<Int, Int>> ) {
         viewLifecycleOwner.lifecycleScope.launch {
             for (i in 1..4) {
                 gameViewModel.markTilesAsHighlighted(positions)

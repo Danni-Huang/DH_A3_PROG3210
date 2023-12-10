@@ -48,11 +48,10 @@
         android:layout_below="@id/startGameButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
-        android:text="3"
         android:textSize="28sp"
-        android:visibility="invisible"
         android:textStyle="bold"
-        android:textColor="@color/grey"/>
+        android:textColor="@color/grey"
+        android:visibility="invisible" />
 
     <GridLayout
         android:id="@+id/gridLayout"

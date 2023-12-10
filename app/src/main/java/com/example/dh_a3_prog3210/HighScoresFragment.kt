@@ -56,7 +56,7 @@ class HighScoresFragment : Fragment() {
         score3 = view.findViewById(R.id.score3)
 
         val highscoreViewModel = ViewModelProvider(requireActivity()).get(HighscoreViewModel::class.java)
-        val playerScores = highscoreViewModel.getPlayerScores()
+        val playerScores = highscoreViewModel.getTopScores()
 
         name1.text = playerScores[0].first
         score1.text = playerScores[0].second.toString()

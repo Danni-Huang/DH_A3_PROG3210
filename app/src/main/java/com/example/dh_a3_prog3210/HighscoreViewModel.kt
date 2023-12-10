@@ -3,7 +3,7 @@ import androidx.lifecycle.ViewModel
 class HighscoreViewModel: ViewModel() {
     private var playerTopScores = HighscoreModel().playerTopScores
 
-    fun updatePlayerScore(player: String, score: Int) {
+    fun addToScoreBoard(player: String, score: Int) {
         // If player name is not enter, do not update player final score for rendering on score board
         if (player == "") {
             return
@@ -19,7 +19,7 @@ class HighscoreViewModel: ViewModel() {
         playerTopScores.sortByDescending { it.second }
     }
 
-    fun getPlayerScores(): MutableList<Pair<String, Int>> {
+    fun getTopScores(): MutableList<Pair<String, Int>> {
         return playerTopScores
     }
 }
