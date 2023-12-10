@@ -28,6 +28,9 @@ class GameFragment : Fragment() {
     private var showResult = false
     private var gameOngoing= false
     private var blockStartButton = false
+    private var winRoundNumber = 0
+    private var gameContinue = true
+    private var timeUp = true
 
     private val gameViewModel by lazy {
         ViewModelProvider(this).get(GameViewModel::class.java)
@@ -41,6 +44,7 @@ class GameFragment : Fragment() {
         startGameButton = view.findViewById(R.id.startGameButton)
         tvCountdown = view.findViewById(R.id.tvCountdown)
         tvScore = view.findViewById(R.id.tvScore)
+        tvTiles = view.findViewById(R.id.tvTiles)
 
         val playerViewModel = ViewModelProvider(requireActivity()).get(PlayerViewModel::class.java)
         val highscoreViewModel = ViewModelProvider(requireActivity()).get(HighscoreViewModel::class.java)
@@ -49,9 +53,8 @@ class GameFragment : Fragment() {
 
         val imageSize = 160
         val marginSize = 4
-        var score: Int
 
-        val tiles = gameViewModel.originalTiles.value ?: emptyList()
+        val tiles = gameViewModel.generateTiles()
 
         for (tile in tiles) {
             val imageView = ImageView(context)
@@ -59,194 +62,148 @@ class GameFragment : Fragment() {
                 width = imageSize
                 height = imageSize
                 setMargins(marginSize, marginSize, marginSize, marginSize)
-                rowSpec = GridLayout.spec(tile.id / 6)  // Assuming id is unique for each tile
-                columnSpec = GridLayout.spec(tile.id % 6)
+                rowSpec = GridLayout.spec(tile.row)  // Assuming id is unique for each tile
+                columnSpec = GridLayout.spec(tile.col)
             }
 
-            imageView.setImageResource(tile.originalImageResource)
+            imageView.setImageResource(tile.currentImage)
             // Add the imageView to your grid layout
             gridLayout.addView(imageView)
 
             imageView.setOnClickListener {
-                // Handle the click event by calling a method in the ViewModel
                 if (gameOngoing) {
-                    val gameContinue = gameViewModel.onTileClicked(tile)
-
-                    if (gameContinue) {
-                        for (position in gameViewModel.clickedPositions) {
-                            gameViewModel.highlightSelectedTile(position.first, position.second)
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val roundContinue = gameViewModel.onTileClick(tile)
+                        updateTileUI(tile)
+                        if (roundContinue && gameViewModel.isGameWin()) {
+                            gameOngoing= false
+                            gameContinue = true
+                            winRoundNumber += 1
+                            Toast.makeText(requireContext(), "Great! Continue to next round!", Toast.LENGTH_LONG).show()
+                            val score = gameViewModel.getScore()
+                            renderScore(score.toString())
+                            delay(500)
+                            gameViewModel.clearAllPositions()
                         }
-                        highlightTiles(gameViewModel.clickedPositions)
-                        Log.d("gameResult", "right click, game continue")
-                    } else {
-                        showResult = true
-                        // Reset the countdown text and hide the TextView
-                        tvCountdown.text = "You lose! Your total score is " + playerViewModel.score().toString()
-                        if (playerViewModel.name() != "") {
+
+                        if (!roundContinue){
+                            gameOngoing= false
+                            gameContinue = false
+                            timeUp = false
+                            renderLost()
+                            val score = gameViewModel.getScore()
+                            playerViewModel.addScore(score)
                             highscoreViewModel.updatePlayerScore(playerViewModel.name(), playerViewModel.score())
+                            delay(2000)
+
+                            clearGame()
+                            renderScore(gameViewModel.getScore().toString())
                         }
-                        playerViewModel.clearScore()
-                        score = 0
-                        tvScore.text = score.toString()
-                        tvCountdown.visibility = View.VISIBLE
-                        gameViewModel.clickedPositions = emptyList()
-                        Log.d("gameResult", "wrong click, game stop")
                     }
-
-                    val gameResult = gameViewModel.isWin()
-                    if (gameResult) {
-                        showResult = true
-                        // Reset the countdown text and hide the TextView
-                        tvCountdown.text = "You win!"
-                        playerViewModel.addScore(10)
-                        score = playerViewModel.score()
-                        tvScore.text = score.toString()
-
-                        tvCountdown.visibility = View.VISIBLE
-                        gameViewModel.clickedPositions = emptyList()
-                    }
-
-                    Log.d("gameResult", gameResult.toString())
-                }
-            }
-        }
-
-        gameViewModel.originalTiles.observe(viewLifecycleOwner) { tiles ->
-            // Update UI based on the changes in originalTiles
-            // For example, iterate through tiles and update ImageView src or background color
-            tiles.forEach { tile ->
-                val imageView = getImageViewForTile(tile)
-                if (imageView != null) {
-                    imageView.setImageResource(tile.originalImageResource)
                 }
             }
         }
 
         // Set click listener for the "Start Game" button
         startGameButton.setOnClickListener {
-            if (!blockStartButton) {
-                Log.d("GameStart", "Player ${playerViewModel.name()} starting the game!")
-                blockStartButton = true
-                showResult = false
-                gameViewModel.resetHighlightedTiles()
-
-                gameViewModel.highlightedTilePositions.value?.let { positions ->
-                    highlightTiles(positions)
-                }
-
-                // Start the game by triggering the highlighting of tiles
-                gameViewModel.highlightRandomTiles()
-
-                // Display the countdown text
-                tvCountdown.visibility = View.VISIBLE
-
-                // Use a Coroutine to remove the initial highlight after 3 seconds
-                viewLifecycleOwner.lifecycleScope.launch {
-                    for (i in 3 downTo 1) {
-                        tvCountdown.text = i.toString()
-                        delay(1000)
-                    }
-
-                    gameViewModel.hideRandomTiles()
-
-                    gameViewModel.highlightedTilePositions.value?.let { positions ->
-                        highlightTiles(positions)
-                    }
-
-                    Log.d("GameFragment", "About to reset initially highlighted tiles")
-                    // Reset the initial highlight
-                    gameViewModel.resetInitiallyHighlightedTiles()
-
-                    Log.d("GameAnswer", gameViewModel.highlightedPositionsLiveData.value.toString())
-
-                    for (i in 6 downTo 1) {
-                        if (!showResult) {
-                            if (i == 6) {
-                                tvCountdown.text = "Start guessing!"
-                                gameOngoing = true
-                                delay(1000)
-                                continue
-                            }
-                            tvCountdown.text = i.toString()
-                            delay(1000)
-                        }
-                    }
-
-                    gameOngoing = false
-                    blockStartButton = false
-
-                    if (!showResult) {
-                        // Reset the countdown text and hide the TextView
-                        tvCountdown.text = ""
-                        tvCountdown.visibility = View.INVISIBLE
-                    }
-
-                    gameViewModel.highlightExistingTiles()
-
-                    gameViewModel.highlightedPositionsLiveData.value?.let { positions ->
-                        highlightTiles(positions)
-                    }
-                }
-            }
-        }
-
-        // Observe changes in highlighted positions
-        gameViewModel.highlightedPositionsLiveData.observe(viewLifecycleOwner) { positions ->
-            // Update UI based on the highlighted positions
-            Log.d("GameFragment", "Observed highlighted positions: $positions")
-            highlightTiles(positions)
-        }
-
-        Log.d("GameFragment", "Child count of gridLayout: ${gridLayout.childCount}")
-        for (i in 0 until gridLayout.childCount) {
-            val child = gridLayout.getChildAt(i)
-            Log.d("GameFragment", "Child $i type: ${child.javaClass.simpleName}")
-        }
-
-        gameViewModel.showWrongMessage.observe(viewLifecycleOwner) {
-            Log.d("GameFragment", "Wrong message triggered")
-            Toast.makeText(requireContext(), "Wrong", Toast.LENGTH_LONG).show()
-
-            // Delay the reset to ensure the wrong message is displayed
             viewLifecycleOwner.lifecycleScope.launch {
-                delay(1000) // Adjust the delay as needed
-                gameViewModel.resetInitiallyHighlightedTiles()
-            }
-        }
+                startGameButton.isEnabled = false
+                gameContinue = true
+                while (gameContinue) {
+                    gameOngoing = false
+                    val highlightTileCount = gameViewModel.getHightTilesByRoundNumber()
+                    renderTileCount(highlightTileCount.toString())
+                    gameContinue = false
+                    val positions = gameViewModel.generateRandomPositions(highlightTileCount)
+                    gameViewModel.markTilesAsHighlighted(positions)
+                    val allTiles = gameViewModel.getTiles()
 
-        gameViewModel.updateTileUILiveData.observe(viewLifecycleOwner) { updatedTile ->
-            // Update the UI for the specific tile (e.g., change the image resource)
-            updateTileUI(updatedTile)
+                    // Render highlighted tiles and wait 3 seconds
+                    renderTiles(allTiles)
+                    delay(3000)
+
+                    // Set the game as ongoing to start the game.
+                    gameOngoing = true
+                    gameViewModel.clearTileHighlights()
+                    renderTiles(allTiles)
+
+                    // 5 Seconds for user to select tiles
+                    delay(5000)
+                }
+                if (timeUp) {
+                    renderLost()
+                    delay(2000)
+                    gameOngoing= false
+                    timeUp = true
+                    clearGame()
+                    val score = gameViewModel.getScore()
+                    renderScore(score.toString())
+                    playerViewModel.addScore(score)
+                    highscoreViewModel.updatePlayerScore(playerViewModel.name(), playerViewModel.score())
+                }
+                startGameButton.isEnabled = true
+            }
         }
     }
 
-    private fun highlightTiles(positions: List<Pair<Int, Int>>) {
-        for ((row, col) in positions) {
-            val tile = gameViewModel.getTileAtPosition(row, col)
-            tile?.let {
-                // Update the UI based on the Tile data (e.g., change background color or image)
-                updateTileUI(tile)
+    fun flashTiles(positions: List<Pair<Int, Int>> ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            for (i in 1..4) {
+                gameViewModel.markTilesAsHighlighted(positions)
+                val allTiles = gameViewModel.getTiles()
+                renderTiles(allTiles)
+                delay(500)
+                gameViewModel.clearTileHighlights()
+                renderTiles(allTiles)
+                delay(500)
             }
+        }
+    }
+
+    private fun renderLost() {
+        winRoundNumber = 0
+
+        val correctPositions = gameViewModel.getCorrectPositions().map { it.copy() }
+
+        gameViewModel.clearAllPositions()
+        val allTiles = gameViewModel.getTiles()
+        renderTiles(allTiles)
+
+        Toast.makeText(requireContext(), "Sorry! You lost.", Toast.LENGTH_LONG).show()
+        flashTiles(correctPositions)
+    }
+
+    private fun clearGame() {
+        gameViewModel.clearScoresAndRound()
+        gameViewModel.clearAllPositions()
+        renderTileCount(gameViewModel.getHightTilesByRoundNumber().toString())
+        val allTiles = gameViewModel.getTiles()
+        renderTiles(allTiles)
+    }
+
+
+    private fun renderTileCount(number: String) {
+        tvTiles.text = "Tiles: ${number}"
+    }
+
+    private fun renderScore(score: String) {
+        tvScore.text = "Score: ${score}"
+    }
+
+
+    private fun renderTiles(tiles: List<GameModel.Tile>) {
+        for (tile in tiles) {
+            updateTileUI(tile)
         }
     }
 
     private fun updateTileUI(tile: GameModel.Tile) {
-        Log.d("GameFragment", "Updating UI for tile ${tile.id}")
         val imageView = gridLayout.getChildAt(tile.id) as? ImageView
         imageView?.let {
-            Log.d("GameFragment", "ImageView found for tile ${tile.id}")
             viewLifecycleOwner.lifecycleScope.launch {
-                if (tile.isHighlighted) {
-                    // If the tile is highlighted, use the highlightedImageResource
-                    it.setImageResource(tile.highlightedImageResource)
-                    Log.d("GameFragment", "Tile ${tile.id} is highlighted. Image resource set to green_grid.")
-                } else {
-                    // Otherwise, use the originalImageResource
-                    it.setImageResource(tile.originalImageResource)
-                    Log.d("GameFragment", "Tile ${tile.id} is not highlighted. Image resource set to blue_grid.")
-                }
+                it.setImageResource(tile.currentImage)
             }
-        } ?: Log.e("GameFragment", "ImageView not found for tile ${tile.id}")
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -269,24 +226,9 @@ class GameFragment : Fragment() {
         // Initialize TextViews
         tvTiles = fragmentView.findViewById(R.id.tvTiles)
         tvScore = fragmentView.findViewById(R.id.tvScore)
+        renderTileCount(gameViewModel.getHightTilesByRoundNumber().toString())
 
         // Inflate the layout for this fragment
         return fragmentView
-    }
-
-    private fun updateHighlightedTilesUI(highlightedTiles: List<GameModel.Tile>) {
-        // Implement UI update logic to highlight the specified tiles
-        // For example, change the background color of the corresponding views
-    }
-
-    private fun getImageViewForTile(tile: GameModel.Tile): ImageView? {
-        // Implement the logic to find the ImageView for the given tile
-        // You can use tags, IDs, or other mechanisms to identify ImageViews
-        // Return the corresponding ImageView or null if not found
-        // For example, you might have a list of ImageViews associated with each tile
-        // and you can find the correct one based on the tile's position or ID.
-        // ...
-
-        return null
     }
 }

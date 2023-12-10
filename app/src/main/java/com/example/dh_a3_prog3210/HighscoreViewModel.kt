@@ -4,6 +4,11 @@ class HighscoreViewModel: ViewModel() {
     private var playerTopScores = HighscoreModel().playerTopScores
 
     fun updatePlayerScore(player: String, score: Int) {
+        // If player name is not enter, do not update player final score for rendering on score board
+        if (player == "") {
+            return
+        }
+
         val newPlayerScore = player to score
 
         val lowestScoreIndex = playerTopScores.indexOf(playerTopScores.minByOrNull { it.second }!!)
